@@ -3,7 +3,7 @@
           class="test-canvas">
     <h2>{{id}}</h2>
     <canvas :id="id"
-            style="border: 1px solid red;"></canvas>
+            :style="{border:borderColorChange}"></canvas>
   </el-col>
 </template>
 
@@ -11,6 +11,10 @@
 export default {
   props: {
     id: {
+      type: String,
+      default: ""
+    },
+    borderColor: {
       type: String,
       default: ""
     },
@@ -41,6 +45,13 @@ export default {
     offOn(newValue, oldValue) {
       this.initCanvas();
       this.draw();
+    }
+  },
+  computed: {
+    borderColorChange() {
+      const borderColor =
+        this.id === "gt" ? "2px solid #ff0000" : this.borderColor;
+      return borderColor;
     }
   },
   mounted() {

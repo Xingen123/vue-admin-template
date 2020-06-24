@@ -1,11 +1,11 @@
 <template>
   <div class="test">
-
     <AppSlider :offOn="offOn"
                :timeObj="timeObj"
                @initDarw="initDarw" />
     <AppMap v-for="item in appMapList"
             :key="item.id"
+            :borderColor="item.borderColor"
             :imgUrl="item.url"
             :offOn="offOn"
             :id="item.id" />
@@ -29,11 +29,11 @@ export default {
         return i;
       })(),
       appMapList: [
-        { url: "", id: "gt" },
-        { url: "", id: "klsp" },
-        { url: "", id: "rover" },
-        { url: "", id: "trajgru" },
-        { url: "", id: "ygnet" }
+        { id: "gt", borderColor: "", url: "" },
+        { id: "klsp", borderColor: "", url: "" },
+        { id: "rover", borderColor: "", url: "" },
+        { id: "trajgru", borderColor: "", url: "" },
+        { id: "ygnet", borderColor: "", url: "" }
       ],
       tableData: [],
       timeObj: {},
@@ -46,14 +46,15 @@ export default {
   },
   methods: {
     initDarw(e) {
-      console.log(e);
-
+      const borderColor =
+        e > 10 && e !== 31 ? "2px solid #00ff00" : "2px solid #ff0000";
       this.appMapList = this.appMapList.map(item => {
         let url =
           e < 31 ? this.tableData[item.id][e - 1] : this.tableData[item.id][0];
         return {
           ...item,
-          url
+          url,
+          borderColor
         };
       });
     },
@@ -82,9 +83,5 @@ export default {
 .test {
   width: 80%;
   margin: 0 auto;
-}
-.app_map {
-  /* display: flex;
-  flex-direction: row; */
 }
 </style>

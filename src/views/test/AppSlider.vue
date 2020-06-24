@@ -5,12 +5,12 @@
                :max="play.endStr"
                @change="clickSlider"></el-slider>
     <div class="app_time_box">
-      <span>{{timeObj.startTime}}</span>
-      <span>{{dynamicTime}}/{{timeObj.endTime}}</span>
+      <span>{{timeObj.startTime | formatTime}}</span>
+      <span>{{dynamicTime | formatTime}}/{{timeObj.endTime | formatTime}}</span>
     </div>
     <el-button icon="el-icon-search"
                circle
-               @click="togell"
+               @click="toggle"
                v-text='play.draw ? "开始" : "暂停"'></el-button>
   </div>
 </template>
@@ -50,7 +50,7 @@ export default {
       let time =
         this.play.progress < 2
           ? this.timeObj.startTime
-          : this.timestampToTime(
+          : this.$options.filters["timestampToTime"](
               startTime + reduceStartEnd * this.play.progress
             );
       return time;
@@ -60,7 +60,10 @@ export default {
     clickSlider(e) {
       this.$emit("initDarw", e);
     },
-    togell() {
+    stop() {
+      window.cancelAnimationFrame(this.timer);
+    },
+    toggle() {
       this.play.draw = !this.play.draw;
       if (this.play.draw) {
         this.stop();
@@ -68,40 +71,64 @@ export default {
         this.progress();
       }
     },
-    progress() {
-      clearInterval(this.timer);
-      this.timer = setInterval(() => {
-        this.play.progress++;
-        this.$emit("initDarw", this.play.progress);
-        if (this.play.progress === 31) {
-          this.play.progress = 0;
-        }
-      }, 1000);
-    },
-    // 时间戳转换成时间 yyyy-MM-dd HH:mm:ss
-    timestampToTime(timestamp) {
-      let strDate = "";
-      let date = new Date(timestamp); //时间戳为10位需*1000，时间戳为13位的话不需乘1000
-      let Y = date.getFullYear() + "-";
-      let M =
-        (date.getMonth() + 1 < 10
-          ? "0" + (date.getMonth() + 1)
-          : date.getMonth() + 1) + "-";
-      let D =
-        (date.getDate() < 10 ? "0" + date.getDate() : date.getDate()) + " ";
-      let h =
-        (date.getHours() < 10 ? "0" + date.getHours() : date.getHours()) + ":";
-      let m =
-        (date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes()) +
-        ":";
-      let s =
-        date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
 
-      strDate = Y + M + D + h + m + s;
-      return strDate;
+    progress() {
+      let then = Date.now() - 500;
+      let interval = 500;
+      let _this = this;
+      // 处理浏览器兼容
+      window.requestAFrame = (function() {
+        return (
+          window.requestAnimationFrame ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame ||
+          window.oRequestAnimationFrame ||
+          // if all else fails, use setTimeout
+          function(callback) {
+            return window.setTimeout(callback, 1000 / 60); // shoot for 60 fps
+          }
+        );
+      })();
+      this.timer = window.requestAFrame(function fn() {
+        _this.timer = window.requestAFrame(fn);
+        //....逻辑代码
+        let now = Date.now();
+        let delta = now - then;
+        if (delta > interval) {
+          then = now - (delta % interval);
+          _this.play.progress++;
+          _this.$emit("initDarw", _this.play.progress);
+          if (_this.play.progress === 31) {
+            _this.play.progress = 0;
+          }
+        }
+      });
     },
-    stop() {
-      clearInterval(this.timer);
+    // 键盘事件
+    addKeybord() {
+      let then = Date.now() - 100;
+      window.onkeydown = e => {
+        let now = Date.now();
+        if (now - then < 100) {
+          return;
+        }
+        if (e.keyCode == 32) {
+          this.play.flag = !this.play.flag;
+          if (this.play.end) {
+            this.play.num = 0;
+            this.play.end = false;
+          }
+        } else if (e.keyCode == 37) {
+          // 左箭头
+          this.play.num--;
+          this.play.num = this.play.num < 0 ? 0 : this.play.num;
+        } else if (e.keyCode == 39) {
+          // 右箭头
+          this.play.num++;
+          this.play.num = this.play.num > 29 ? 29 : this.play.num;
+        }
+        then = Date.now();
+      };
     }
   }
 };
